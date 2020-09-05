@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"kvuR/kv"
+
+	"github.com/HuyuYasumi/kvuR/kv"
 )
 
 func main() {

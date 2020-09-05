@@ -2,11 +2,12 @@ package kv
 
 import (
 	"fmt"
-	"github.com/satori/go.uuid"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
-	"kvuR/rpcutil"
 	"os"
+
+	"github.com/HuyuYasumi/kvuR/rpcutil"
+	"github.com/satori/go.uuid"
 )
 import "crypto/rand"
 import "math/big"

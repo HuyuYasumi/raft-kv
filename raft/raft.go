@@ -2,12 +2,13 @@ package raft
 
 import (
 	"bytes"
-	"kvuR/labgob"
-	"kvuR/rpcutil"
 	"log"
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/HuyuYasumi/kvuR/labgob"
+	"github.com/HuyuYasumi/kvuR/rpcutil"
 )
 import "sync/atomic"
 

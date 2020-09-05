@@ -2,10 +2,11 @@ package main
 
 import (
 	"bufio"
-	"kvuR/kv"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/HuyuYasumi/kvuR/kv"
 )
 
 type ClientConfig struct {

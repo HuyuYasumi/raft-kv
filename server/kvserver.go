@@ -3,14 +3,15 @@ package main
 import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
-	"kvuR/kv"
-	"kvuR/raft"
-	"kvuR/rpcutil"
 	"log"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
+
+	"github.com/HuyuYasumi/kvuR/kv"
+	"github.com/HuyuYasumi/kvuR/raft"
+	"github.com/HuyuYasumi/kvuR/rpcutil"
 )
 
 type Config struct {

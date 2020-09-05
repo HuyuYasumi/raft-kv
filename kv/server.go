@@ -2,15 +2,16 @@ package kv
 
 import (
 	"fmt"
-	uuid "github.com/satori/go.uuid"
-	"kvuR/labgob"
-	"kvuR/raft"
-	"kvuR/rpcutil"
 	"log"
 	"net/rpc"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/HuyuYasumi/kvuR/labgob"
+	"github.com/HuyuYasumi/kvuR/raft"
+	"github.com/HuyuYasumi/kvuR/rpcutil"
+	uuid "github.com/satori/go.uuid"
 )
 
 const Debug = 1

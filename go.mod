@@ -1,4 +1,4 @@
-module kvuR
+module github.com/HuyuYasumi/kvuR
 
 go 1.13
 

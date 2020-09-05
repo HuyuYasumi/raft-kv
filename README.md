@@ -2,11 +2,17 @@
 
 A Go implementation of Raft Algorithm & A fault-tolerant primary/backup K/V storage system that use the implementation.
 
+## Get the module
+
+```shell script
+go get github.com/HuyuYasumi/kvuR
+```
+
 ## Raft
 
-### To see the paper: [In Search of an Understandable Consensus Algorithm(Extended Version)](https://raft.github.io/raft.pdf) 
+### See the paper: [In Search of an Understandable Consensus Algorithm(Extended Version)](https://raft.github.io/raft.pdf) 
 
-### To see the implementation: [raft](raft)
+### See the implementation: [raft](raft)
 
 ## Primary/backup K/V storage system
 
@@ -60,7 +66,8 @@ package main
 
 import (
 	"fmt"
-	"kvuR/kv"
+
+	"github.com/HuyuYasumi/kvuR/kv"
 )
 
 func main() {
