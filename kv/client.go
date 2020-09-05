@@ -3,10 +3,20 @@ package kv
 import (
 	"fmt"
 	"github.com/satori/go.uuid"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
 	"kvuR/rpcutil"
+	"os"
 )
 import "crypto/rand"
 import "math/big"
+
+type ClientConfig struct {
+	ClientEnd []struct {
+		Ip   string
+		Port string
+	} `yaml:"servers"`
+}
 
 type Clerk struct {
 	servers []*rpcutil.ClientEnd
@@ -102,6 +112,42 @@ func (ck *Clerk) Put(key string, value string) {
 }
 func (ck *Clerk) Append(key string, value string) {
 	ck.putAppend(key, value, OpAppend)
+}
+
+func GetClientEnds(path string) []*rpcutil.ClientEnd {
+	config := getClientConfig(path)
+
+	clientEnds := make([]*rpcutil.ClientEnd, 0)
+	for _, end := range config.ClientEnd {
+		address := end.Ip + ":" + end.Port
+		client := rpcutil.TryConnect(address)
+
+		ce := &rpcutil.ClientEnd{
+			Addr:   address,
+			Client: client,
+		}
+
+		clientEnds = append(clientEnds, ce)
+	}
+	return clientEnds
+}
+
+func getClientConfig(path string) *ClientConfig {
+	if len(os.Args) == 2 {
+		path = os.Args[1]
+	}
+
+	cfgbt, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	config := &ClientConfig{}
+	err = yaml.Unmarshal(cfgbt, config)
+	if err != nil {
+		panic(err)
+	}
+	return config
 }
 
 func generateUUID() uuid.UUID {
