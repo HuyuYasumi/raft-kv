@@ -1,17 +1,16 @@
-package kvraft
+package kv
 
 import (
-	"kvuR/rpc"
 	"fmt"
 	"github.com/satori/go.uuid"
+	"kvuR/rpcutil"
 )
 import "crypto/rand"
 import "math/big"
 
-
 type Clerk struct {
-	servers []*rpc.ClientEnd
-	id uuid.UUID
+	servers []*rpcutil.ClientEnd
+	id      uuid.UUID
 	servlen int
 	leader  int
 }
@@ -23,7 +22,7 @@ func nrand() int64 {
 	return x
 }
 
-func MakeClerk(servers []*rpc.ClientEnd) *Clerk {
+func MakeClerk(servers []*rpcutil.ClientEnd) *Clerk {
 	ck := new(Clerk)
 	ck.servers = servers
 	ck.id = generateUUID()
@@ -42,8 +41,7 @@ func (ck *Clerk) Get(key string) string {
 	DPrintf("%v 发送 Get 请求 {Key=%v Serial=%v}",
 		ck.id, key, args.Serial)
 	for {
-		if ok := ck.servers[ck.leader].Call(RPCGet, args, reply);
-			!ok {
+		if ok := ck.servers[ck.leader].Call(RPCGet, args, reply); !ok {
 			//DPrintf("%v 对 服务器 %v 的 Get 请求 (Key=%v Serial=%v) 超时",
 			//	ck.id, ck.leader, key, args.Serial)
 			ck.leader = (ck.leader + 1) % ck.servlen
@@ -67,11 +65,11 @@ func (ck *Clerk) Get(key string) string {
 	}
 }
 
-func (ck *Clerk) PutAppend(key string, value string, op string) {
+func (ck *Clerk) putAppend(key string, value string, op string) {
 	args := &PutAppendArgs{
-		Key:   key,
-		Value: value,
-		Op:    op,
+		Key:    key,
+		Value:  value,
+		Op:     op,
 		Id:     ck.id,
 		Serial: generateUUID(),
 	}
@@ -79,8 +77,7 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 	DPrintf("%v 发送 PA 请求 {Op=%v Key=%v Value='%v' Serial=%v}",
 		ck.id, op, key, value, args.Serial)
 	for {
-		if ok := ck.servers[ck.leader].Call(RPCPutAppend, args, reply);
-			!ok {
+		if ok := ck.servers[ck.leader].Call(RPCPutAppend, args, reply); !ok {
 			//DPrintf("%v 对 服务器 %v 的 PutAppend 请求 (Serial=%v Key=%v Value=%v op=%v) 超时",
 			//	ck.id, ck.leader, args.Serial, key, value, op)
 			ck.leader = (ck.leader + 1) % ck.servlen
@@ -101,10 +98,10 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 }
 
 func (ck *Clerk) Put(key string, value string) {
-	ck.PutAppend(key, value, OpPut)
+	ck.putAppend(key, value, OpPut)
 }
 func (ck *Clerk) Append(key string, value string) {
-	ck.PutAppend(key, value, OpAppend)
+	ck.putAppend(key, value, OpAppend)
 }
 
 func generateUUID() uuid.UUID {

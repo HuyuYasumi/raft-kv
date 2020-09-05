@@ -1,4 +1,4 @@
-package kvraft
+package kv
 
 import uuid "github.com/satori/go.uuid"
 
@@ -19,9 +19,9 @@ type Err string
 
 // Put or Append
 type PutAppendArgs struct {
-	Key   string
-	Value string
-	Op    string // "Put" or "Append"
+	Key    string
+	Value  string
+	Op     string // "Put" or "Append"
 	Id     uuid.UUID
 	Serial uuid.UUID
 }
@@ -31,8 +31,8 @@ type PutAppendReply struct {
 }
 
 type GetArgs struct {
-	Key string
-	Id  uuid.UUID
+	Key    string
+	Id     uuid.UUID
 	Serial uuid.UUID
 }
 

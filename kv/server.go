@@ -1,18 +1,19 @@
-package kvraft
+package kv
 
 import (
-	"kvuR/labgob"
-	"kvuR/raft"
-	"kvuR/rpc"
 	"fmt"
 	uuid "github.com/satori/go.uuid"
+	"kvuR/labgob"
+	"kvuR/raft"
+	"kvuR/rpcutil"
 	"log"
+	"net/rpc"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
-const Debug = 0
+const Debug = 1
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -21,14 +22,12 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 	return
 }
 
-
 type Op struct {
-	Type string
-	Key  string
-	Value string
+	Type   string
+	Key    string
+	Value  string
 	Serial uuid.UUID
 }
-
 
 type CommonReply struct {
 	Serial *uuid.UUID
@@ -36,7 +35,6 @@ type CommonReply struct {
 	Key    string
 	Value  string
 }
-
 
 type KVServer struct {
 	mu      sync.Mutex
@@ -47,24 +45,23 @@ type KVServer struct {
 
 	maxraftstate int // snapshot if log grows this big
 
-	data             map[string]string
-	commonReplies    []*CommonReply
+	data          map[string]string
+	commonReplies []*CommonReply
 }
 
-
-func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
+func (kv *KVServer) Get(args *GetArgs, reply *GetReply) error {
 	op := &Op{
-		Type: OpGet,
-		Key:  args.Key,
-		Value: NoKeyValue,
-		Serial:args.Serial,
+		Type:   OpGet,
+		Key:    args.Key,
+		Value:  NoKeyValue,
+		Serial: args.Serial,
 	}
 	reply.Err = ErrWrongLeader
 	idx, _, isLeader := kv.rf.Start(*op)
 	if !isLeader {
 		DPrintf("%v 对于 %v 的 Get 请求 {Key=%v Serial=%v} 处理结果为 该服务器不是领导者",
 			kv.me, args.Id, args.Key, args.Serial)
-		return
+		return nil
 	}
 	DPrintf("%v 等待对 %v 的 Get 请求 {Key=%v Serial=%v} 的提交，应提交索引为 %v",
 		kv.me, args.Id, args.Key, args.Serial, idx)
@@ -73,25 +70,27 @@ func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 	find := kv.findReply(op, idx, commonReply)
 	if find == OK {
 		reply.Value = commonReply.Value
-		reply.Err   = commonReply.Err
+		reply.Err = commonReply.Err
 	}
 	DPrintf("%v 对于 %v 的 Get 请求 {Key=%v Serial=%v} 处理结果为 %v, len(Value)=%v",
 		kv.me, args.Id, args.Key, args.Serial, reply.Err, len(reply.Value))
+
+	return nil
 }
 
-func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
+func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
 	op := &Op{
-		Type: args.Op,
-		Key:  args.Key,
-		Value:args.Value,
-		Serial:args.Serial,
+		Type:   args.Op,
+		Key:    args.Key,
+		Value:  args.Value,
+		Serial: args.Serial,
 	}
 	reply.Err = ErrWrongLeader
 	idx, _, isLeader := kv.rf.Start(*op)
 	if !isLeader {
 		DPrintf("%v 对于 %v 的 %v 请求 {Key=%v Serial=%v Value='%v'} 处理结果为 该服务器不是领导者",
 			kv.me, args.Id, args.Op, args.Key, args.Serial, args.Value)
-		return
+		return nil
 	}
 	DPrintf("%v 等待对 %v 的 %v 请求 {Key=%v Serial=%v Value='%v'} 的提交，应提交索引为 %v",
 		kv.me, args.Id, args.Op, args.Key, args.Serial, args.Value, idx)
@@ -103,6 +102,8 @@ func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 	}
 	DPrintf("%v 对于 %v 的 %v 请求 {Key=%v Serial=%v Value='%v'} 处理结果为 %v",
 		kv.me, args.Id, args.Op, args.Key, args.Serial, args.Value, reply.Err)
+
+	return nil
 }
 
 func (kv *KVServer) findReply(op *Op, idx int, reply *CommonReply) string {
@@ -138,7 +139,7 @@ func (kv *KVServer) killed() bool {
 	return z == 1
 }
 
-func StartKVServer(servers []*rpc.ClientEnd, me int, persister *raft.Persister, maxraftstate int) *KVServer {
+func StartKVServer(servers []*rpcutil.ClientEnd, me int, persister *raft.Persister, maxraftstate int) *KVServer {
 	// Go's RPC library to marshall/unmarshall.
 	labgob.Register(Op{})
 
@@ -146,12 +147,14 @@ func StartKVServer(servers []*rpc.ClientEnd, me int, persister *raft.Persister, 
 	kv.me = me
 	kv.maxraftstate = maxraftstate
 
-
 	kv.applyCh = make(chan raft.ApplyMsg)
 	kv.rf = raft.Make(servers, me, persister, kv.applyCh)
 	kv.data = make(map[string]string)
 	kv.commonReplies = make([]*CommonReply, 1)
 
+	if err := rpc.Register(kv.rf); err != nil {
+		panic(err)
+	}
 
 	go kv.goFuncGetOp()
 

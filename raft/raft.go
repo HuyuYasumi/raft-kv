@@ -1,10 +1,9 @@
 package raft
 
-
 import (
-	"kvuR/labgob"
-	"kvuR/rpc"
 	"bytes"
+	"kvuR/labgob"
+	"kvuR/rpcutil"
 	"log"
 	"math/rand"
 	"sync"
@@ -41,11 +40,11 @@ const (
 // A Go object implementing a single Raft peer.
 //
 type Raft struct {
-	mu        sync.Mutex          // Lock to protect shared access to this peer's state
-	peers     []*rpc.ClientEnd // RPC end points of all peers
-	persister *Persister          // Object to hold this peer's persisted state
-	me        int                 // this peer's index into peers[]
-	dead      int32               // set by Kill()
+	mu        sync.Mutex           // Lock to protect shared access to this peer's state
+	peers     []*rpcutil.ClientEnd // RPC end points of all peers
+	persister *Persister           // Object to hold this peer's persisted state
+	me        int                  // this peer's index into peers[]
+	dead      int32                // set by Kill()
 
 	// state a Raft server must maintain.
 	currentTerm int        // 服务器最后一次知道的任期号（初始化为 0，持续递增）
@@ -143,8 +142,8 @@ type AppendEntriesArgs struct {
 }
 
 type AppendEntriesReply struct {
-	Term         int        //当前的任期号，用于领导人去更新自己
-	Success      bool       // 跟随者包含了匹配上 PrevLogIndex 和 PrevLogTerm 的日志时为真
+	Term         int  //当前的任期号，用于领导人去更新自己
+	Success      bool // 跟随者包含了匹配上 PrevLogIndex 和 PrevLogTerm 的日志时为真
 	PrevLogIndex int
 }
 
@@ -160,14 +159,14 @@ type RequestVoteReply struct {
 	VoteGranted bool // 候选人赢得了此张选票时为真
 }
 
-func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
+func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) error {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	reply.Term = rf.currentTerm
 	if args.Term < rf.currentTerm {
 		DPrintf("%v: %v 认为 %v 的投票请求 {term=%v, lastIdx=%v, lastTerm=%v} 过时了",
 			rf.currentTerm, rf.me, args.CandidateId, args.Term, args.LastLogIndex, args.LastLogTerm)
-		return
+		return nil
 	}
 
 	if args.Term > rf.currentTerm {
@@ -193,9 +192,10 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	go rf.persist()
 	DPrintf("%v: %v 对 %v 的投票 {term=%v, lastIdx=%v, lastTerm=%v} 结果为 %v, votedFor=%v",
 		rf.currentTerm, rf.me, args.CandidateId, args.Term, args.LastLogIndex, args.LastLogTerm, reply.VoteGranted, rf.votedFor)
+	return nil
 }
 
-func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
+func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) error {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	reply.Term = rf.currentTerm
@@ -217,7 +217,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 			DPrintf("%v: %v 接收到 %v 的复制请求 {term=%v leaderCommit=%v}，结果为：已过时",
 				rf.currentTerm, rf.me, args.LeaderId, args.Term, args.LeaderCommit)
 		}
-		return
+		return nil
 	}
 	if args.PrevLogIndex >= l1 || rf.logs[args.PrevLogIndex].Term != args.PrevLogTerm {
 		if len(args.Entries) > 0 {
@@ -231,7 +231,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		//DPrintf("%v: %v 接收到 %v 的增加条目请求(%v)，结果为 %v", rf.currentTerm, rf.me, args.LeaderId, *args, reply.Success)
 		if args.PrevLogIndex >= l1 {
 			reply.PrevLogIndex = l1
-			return
+			return nil
 		}
 
 		i := args.PrevLogIndex
@@ -239,7 +239,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		for i--; i >= 0 && rf.logs[i].Term == term; i-- {
 		}
 		reply.PrevLogIndex = i + 1
-		return
+		return nil
 	}
 
 	if rf.votedFor == -1 {
@@ -294,6 +294,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 			rf.currentTerm, rf.me, args.LeaderId, args.Term, args.LeaderCommit)
 	}
 	//DPrintf("%v: %v 接收到 %v 的增加条目(%v)请求，结果为 %v", rf.currentTerm, rf.me, args.LeaderId, *args, reply.Success)
+
+	return nil
 }
 
 func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
@@ -570,7 +572,7 @@ func randomTimeout(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func Make(peers []*rpc.ClientEnd, me int,
+func Make(peers []*rpcutil.ClientEnd, me int,
 	persister *Persister, applyCh chan ApplyMsg) *Raft {
 	rf := &Raft{}
 	rf.peers = peers
@@ -632,7 +634,7 @@ func Make(peers []*rpc.ClientEnd, me int,
 				wg.Add(1)
 				go rf.goFuncDoElect(wonCh, &wg)
 
-				timeout := time.Duration(randomTimeout(3000, 3400)) * time.Millisecond
+				timeout := time.Duration(randomTimeout(1000, 1400)) * time.Millisecond
 				wg.Add(1)
 				go func() {
 					time.Sleep(timeout)
