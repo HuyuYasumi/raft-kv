@@ -1,4 +1,4 @@
-# kvuR
+# Raft & KV
 
 A Go implementation of Raft Algorithm & A fault-tolerant primary/backup K/V storage system that use the implementation.
 
