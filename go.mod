@@ -1,4 +1,4 @@
-module github.com/HuyuYasumi/kvuR
+module github.com/HuyuYasumi/raft-kv
 
 go 1.13
 

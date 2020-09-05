@@ -2,19 +2,11 @@ package main
 
 import (
 	"bufio"
+	"github.com/HuyuYasumi/raft-kv/kv"
 	"log"
 	"os"
 	"strings"
-
-	"github.com/HuyuYasumi/kvuR/kv"
 )
-
-type ClientConfig struct {
-	ClientEnd []struct {
-		Ip   string
-		Port string
-	} `yaml:"servers"`
-}
 
 type Command struct {
 	Name   string

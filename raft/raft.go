@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HuyuYasumi/kvuR/labgob"
-	"github.com/HuyuYasumi/kvuR/rpcutil"
+	"github.com/HuyuYasumi/raft-kv/labgob"
+	"github.com/HuyuYasumi/raft-kv/rpcutil"
 )
 import "sync/atomic"
 

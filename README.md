@@ -5,7 +5,7 @@ A Go implementation of Raft Algorithm & A fault-tolerant primary/backup K/V stor
 ## Get the module
 
 ```shell script
-go get github.com/HuyuYasumi/kvuR
+go get github.com/HuyuYasumi/raft-kv
 ```
 
 ## Raft
@@ -67,7 +67,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/HuyuYasumi/kvuR/kv"
+	"github.com/HuyuYasumi/raft-kv/kv"
 )
 
 func main() {

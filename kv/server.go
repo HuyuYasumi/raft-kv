@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/HuyuYasumi/kvuR/labgob"
-	"github.com/HuyuYasumi/kvuR/raft"
-	"github.com/HuyuYasumi/kvuR/rpcutil"
+	"github.com/HuyuYasumi/raft-kv/labgob"
+	"github.com/HuyuYasumi/raft-kv/raft"
+	"github.com/HuyuYasumi/raft-kv/rpcutil"
 	uuid "github.com/satori/go.uuid"
 )
 

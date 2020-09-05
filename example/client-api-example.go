@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/HuyuYasumi/kvuR/kv"
+	"github.com/HuyuYasumi/raft-kv/kv"
 )
 
 func main() {

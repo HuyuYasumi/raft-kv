@@ -9,9 +9,9 @@ import (
 	"net/rpc"
 	"os"
 
-	"github.com/HuyuYasumi/kvuR/kv"
-	"github.com/HuyuYasumi/kvuR/raft"
-	"github.com/HuyuYasumi/kvuR/rpcutil"
+	"github.com/HuyuYasumi/raft-kv/kv"
+	"github.com/HuyuYasumi/raft-kv/raft"
+	"github.com/HuyuYasumi/raft-kv/rpcutil"
 )
 
 type Config struct {

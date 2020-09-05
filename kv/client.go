@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/HuyuYasumi/kvuR/rpcutil"
+	"github.com/HuyuYasumi/raft-kv/rpcutil"
 	"github.com/satori/go.uuid"
 )
 import "crypto/rand"
