@@ -2,10 +2,7 @@ package main
 
 import (
 	"bufio"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"kvuR/kv"
-	"kvuR/rpcutil"
 	"log"
 	"os"
 	"strings"
@@ -35,17 +32,12 @@ const (
 	"get k"
 	"append k v"
 	"put k v"
+	"exit"
 `
 )
 
 func main() {
-	config := getcClientConfig()
-	num := len(config.ClientEnd)
-	if (num & 1) == 0 {
-		panic("总服务器数量必须为单数")
-	}
-
-	clientEnds := getClientEnds(config)
+	clientEnds := kv.GetClientEnds("config/client.yml")
 
 	clerk := kv.MakeClerk(clientEnds)
 
@@ -120,40 +112,4 @@ func readLine() string {
 		log.Fatal(err)
 	}
 	return strings.TrimSpace(string(answer))
-}
-
-func getClientEnds(config *ClientConfig) []*rpcutil.ClientEnd {
-	clientEnds := make([]*rpcutil.ClientEnd, 0)
-	for _, end := range config.ClientEnd {
-		address := end.Ip + ":" + end.Port
-		client := rpcutil.TryConnect(address)
-
-		ce := &rpcutil.ClientEnd{
-			Addr:   address,
-			Client: client,
-		}
-
-		clientEnds = append(clientEnds, ce)
-	}
-	return clientEnds
-}
-
-func getcClientConfig() *ClientConfig {
-	var path string
-	if len(os.Args) == 1 {
-		path = "config/client.yml"
-	} else {
-		path = os.Args[1]
-	}
-	cfgbt, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-
-	config := &ClientConfig{}
-	err = yaml.Unmarshal(cfgbt, config)
-	if err != nil {
-		panic(err)
-	}
-	return config
 }

@@ -116,6 +116,10 @@ func (ck *Clerk) Append(key string, value string) {
 
 func GetClientEnds(path string) []*rpcutil.ClientEnd {
 	config := getClientConfig(path)
+	num := len(config.ClientEnd)
+	if (num&1) == 0 || num < 3 {
+		panic("the number of servers must be odd and greater than or equal to 3")
+	}
 
 	clientEnds := make([]*rpcutil.ClientEnd, 0)
 	for _, end := range config.ClientEnd {

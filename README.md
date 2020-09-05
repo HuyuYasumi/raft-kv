@@ -22,8 +22,9 @@ go run server/kvserver.go example/config/server3.yml
 
 The number of servers must be odd and greater than or equal to 3.
 
-The example/config/server1.yml
 ```yaml
+# example/config/server1.yml
+
 servers: # address list of all k/v servers
   - ip: 127.0.0.1
     port: 10001
@@ -34,15 +35,15 @@ servers: # address list of all k/v servers
 me: 0 # index of my address in address list
 ```
 
-You can use the command line client to communicate with k/v storage service
+You can use the simple command line client to communicate with k/v storage service
 
 ```shell script
 go run cli/kvcli.go example/config/client.yml
 ```
 
-The example/config/client.yml
-
 ```yaml
+# example/config/client.yml
+
 servers: # address list of all k/v servers
   - ip: 127.0.0.1
     port: 10001
